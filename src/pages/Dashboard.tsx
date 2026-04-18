@@ -91,11 +91,11 @@ function computeAverageMood(entries: DayEntry[]): number {
 }
 
 const PHASES = [
-  { name: "Initiation", start: 1, end: 355, emoji: "🌱" },
-  { name: "Consistency", start: 356, end: 1065, emoji: "🔥" },
-  { name: "Identity", start: 1066, end: 2130, emoji: "⚡" },
-  { name: "Deep Habit", start: 2131, end: 3195, emoji: "💪" },
-  { name: "Legacy", start: 3196, end: TOTAL_JOURNAL_DAYS, emoji: "👑" },
+  { name: "Initiation", start: 1, end: 505, emoji: "🌱" },
+  { name: "Consistency", start: 506, end: 1010, emoji: "🔥" },
+  { name: "Identity", start: 1011, end: 1515, emoji: "⚡" },
+  { name: "Deep Habit", start: 1516, end: 2020, emoji: "💪" },
+  { name: "Legacy", start: 2021, end: TOTAL_JOURNAL_DAYS, emoji: "👑" },
 ];
 
 function getCurrentPhase(dayNumber: number) {

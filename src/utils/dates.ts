@@ -5,11 +5,11 @@ import {
   isWithinInterval,
 } from "date-fns";
 
-/** April 28 2026 = Day 1 */
-export const ORIGIN = new Date(2026, 3, 28); // months are 0-indexed
+/** April 27 2026 = Day 1 */
+export const ORIGIN = new Date(2026, 3, 27); // months are 0-indexed
 
-/** Last valid journal date: December 31 2035 */
-export const JOURNAL_END = new Date(2035, 11, 31);
+/** Last valid journal date: December 30 2035 */
+export const JOURNAL_END = new Date(2035, 11, 30);
 
 /** Day-cycle settings: 100 journal days + 1 reflection day */
 export const REFLECTION_CYCLE_DAYS = 101;
@@ -20,7 +20,7 @@ export const TOTAL_JOURNAL_DAYS =
 
 /**
  * Returns the day number for the given date.
- * April 28 2026 -> Day 1.
+ * April 27 2026 -> Day 1.
  */
 export function getDayNumber(date: Date): number {
   return differenceInCalendarDays(date, ORIGIN) + 1;
@@ -28,7 +28,7 @@ export function getDayNumber(date: Date): number {
 
 /**
  * Returns the Date corresponding to a day number.
- * Day 1 -> April 28 2026.
+ * Day 1 -> April 27 2026.
  */
 export function getDateFromDayNumber(n: number): Date {
   return addDays(ORIGIN, n - 1);
@@ -36,7 +36,7 @@ export function getDateFromDayNumber(n: number): Date {
 
 /**
  * True if the date falls within the journal window
- * (April 28 2026 - December 31 2035, inclusive).
+ * (April 27 2026 - December 30 2035, inclusive).
  */
 export function isValidJournalDate(date: Date): boolean {
   return isWithinInterval(date, { start: ORIGIN, end: JOURNAL_END });

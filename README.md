@@ -1,6 +1,6 @@
 # 10 Years Journal
 
-10 Years Journal is a local-first Progressive Web App for documenting a fixed personal journey from April 28, 2026 through December 31, 2035.
+10 Years Journal is a local-first Progressive Web App for documenting a fixed personal journey from April 27, 2026 through December 30, 2035.
 
 It combines daily journaling, mood tracking, habits, timeline browsing, analytics, and end-of-journey reflections in a single offline-capable app.
 
@@ -27,20 +27,20 @@ It combines daily journaling, mood tracking, habits, timeline browsing, analytic
 	- Reflection sections (mood, journal, habits toggle, tags, gratitude, memories) are editable from 8:00 PM until 12:00 PM next day.
 	- After 12:00 PM next day, the entry is read-only.
 - Streak freeze system: up to 2 freezes in a rolling 30-day cycle.
-- Reflection chamber locked until Dec 31, 2035.
+- Reflection chamber locked until Dec 30, 2035.
 - Reflection cadence: 100 journal days plus 1 reflection day, for 35 reflection days total.
 
 ### Milestones
 
 | Day | Date |
 | --- | --- |
-| 505 | Sep 14, 2027 |
-| 1010 | Jan 31, 2029 |
-| 1515 | Jun 20, 2030 |
-| 2020 | Nov 7, 2031 |
-| 2525 | Mar 26, 2033 |
-| 3030 | Aug 13, 2034 |
-| 3535 | Dec 31, 2035 |
+| 505 | Sep 13, 2027 |
+| 1010 | Jan 30, 2029 |
+| 1515 | Jun 19, 2030 |
+| 2020 | Nov 6, 2031 |
+| 2525 | Mar 25, 2033 |
+| 3030 | Aug 12, 2034 |
+| 3535 | Dec 30, 2035 |
 
 ### Exploration and Insights
 - Dashboard with progress, phase context, streak data, and quick actions.

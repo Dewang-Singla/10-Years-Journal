@@ -14,7 +14,7 @@ export default defineConfig({
       manifest: {
         name: '10 Years Journal',
         short_name: '10 Years',
-        description: 'Your personal 10-year life journal — April 28, 2026 to December 31, 2035',
+        description: 'Your personal 10-year life journal — April 27, 2026 to December 30, 2035',
         theme_color: '#F59E0B',
         background_color: '#0F0F0F',
         display: 'standalone',
