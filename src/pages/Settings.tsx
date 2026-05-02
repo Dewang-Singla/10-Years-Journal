@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { parseISO } from "date-fns";
 import {
   Sun,
   Moon,
@@ -12,7 +13,7 @@ import storage from "../storage";
 import { useUIStore } from "../store/uiStore";
 import { useHabitStore } from "../store/habitStore";
 import { hashPin } from "../utils/crypto";
-import { TRIAL_START, GOLDEN_REFLECTION_DAY } from "../utils/dates";
+import { TRIAL_START, GOLDEN_REFLECTION_DAY, isValidJournalDate } from "../utils/dates";
 
 /* ── Constants ──────────────────────────────────────────────── */
 
@@ -70,8 +71,9 @@ export default function Settings() {
     loadHabits();
 
     storage.getAllEntries().then((entries) => {
-      setTotalEntries(entries.length);
-      setTotalWords(entries.reduce((s, e) => s + e.wordCount, 0));
+      const validEntries = entries.filter((entry) => isValidJournalDate(parseISO(entry.id)));
+      setTotalEntries(validEntries.length);
+      setTotalWords(validEntries.reduce((s, e) => s + e.wordCount, 0));
     });
 
     if (navigator.storage?.estimate) {

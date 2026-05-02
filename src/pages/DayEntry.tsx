@@ -144,8 +144,7 @@ export default function DayEntry() {
   useEffect(() => {
     isInitialLoad.current = true;
     hasModified.current = false;
-    autoRatedRef.current = false;
-    setWasAutoRated(false);
+    setCheckpointUndoStack([]);
     loadEntry(dateId);
     loadHabits();
     loadFreezes();
@@ -222,7 +221,7 @@ export default function DayEntry() {
   reflectionStart.setHours(20, 0, 0, 0);
 
   const reflectionEnd = addDays(parseISO(dateId), 1);
-  reflectionEnd.setHours(12, 0, 0, 0);
+  reflectionEnd.setHours(17, 30, 0, 0);
 
   const canManageTodos = !isFutureDate && now < reflectionStart;
   const canToggleTodos = !isFutureDate && now < reflectionEnd;
@@ -232,7 +231,6 @@ export default function DayEntry() {
 
   const yesterdayId = dateToId(addDays(new Date(), -1));
   const isYesterday = dateId === yesterdayId;
-  const graceExpired = isYesterday && isEntryClosed;
 
   /* ── Countdown for "too early" lock ───────────────────── */
   const [countdown, setCountdown] = useState(() => getCountdownToHour(20));
@@ -242,35 +240,15 @@ export default function DayEntry() {
     return () => clearInterval(id);
   }, [isBeforeReflectionWindow, isToday]);
 
-  /* ── Auto-rate yesterday if grace expired & unrated ───── */
-  const autoRatedRef = useRef(false);
-  const [wasAutoRated, setWasAutoRated] = useState(false);
-  useEffect(() => {
-    if (
-      graceExpired &&
-      currentEntry &&
-      currentEntry.moodRating === -1 &&
-      !autoRatedRef.current
-    ) {
-      autoRatedRef.current = true;
-      const updated = {
-        ...currentEntry,
-        moodRating: 3,
-        moodEmoji: "",
-        ratingChecks: [true, true, true, false, false, false, false, false, false, false],
-        updatedAt: new Date().toISOString(),
-      };
-      saveEntry(updated);
-      setWasAutoRated(true);
-    }
-  }, [graceExpired, currentEntry, saveEntry]);
-
   const journeyType = getJourneyDateType(date);
   const journeyTheme = getJourneyTheme(date);
   const displayChecks = currentEntry?.ratingChecks?.length === 10
     ? currentEntry.ratingChecks
     : Array.from({ length: 10 }, () => false);
   const displayPrompts = normalizeCheckpointPrompts(currentEntry?.checkpointPrompts);
+
+  /* ── Checkpoint undo state ──────────────────────────── */
+  const [checkpointUndoStack, setCheckpointUndoStack] = useState<string[][]>([]);
 
   if (!isValidJournalDate(date)) {
     const isBeforeJourneyStart = new Date() < TRIAL_START;
@@ -414,14 +392,6 @@ export default function DayEntry() {
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
             The reflection window ended at noon the next day.
           </p>
-          {wasAutoRated && (
-            <p
-              className="text-sm font-medium px-4 py-2 rounded-lg"
-              style={{ color: "rgba(245,158,11,0.9)", background: "rgba(245,158,11,0.08)" }}
-            >
-              ⚡ This day was automatically rated 3/10 since it wasn&apos;t rated before noon.
-            </p>
-          )}
           {isYesterday && isUnwritten && (
             <div className="w-full max-w-md space-y-2">
               {freezeMsg && (
@@ -675,7 +645,7 @@ export default function DayEntry() {
             color: "var(--text-secondary)",
           }}
         >
-          Reflection window is open for this day until 12:00 PM next day. To-dos are closed.
+          Reflection window is open for this day until 5:30 PM next day. To-dos are closed.
         </div>
       )}
 
@@ -684,6 +654,15 @@ export default function DayEntry() {
         checks={displayChecks}
         prompts={displayPrompts}
         readOnly={!isReflectionEditable}
+        canUndo={checkpointUndoStack.length > 0}
+        onUndo={() => {
+          if (checkpointUndoStack.length === 0) return;
+          const newStack = [...checkpointUndoStack];
+          const prevPrompts = newStack.pop();
+          if (!prevPrompts) return;
+          setCheckpointUndoStack(newStack);
+          updateField("checkpointPrompts", normalizeCheckpointPrompts(prevPrompts));
+        }}
         onToggle={(index) => {
           const nextChecks = [...displayChecks];
           nextChecks[index] = !nextChecks[index];
@@ -698,6 +677,7 @@ export default function DayEntry() {
           updateField("checkpointPrompts", normalizeCheckpointPrompts(nextPrompts));
         }}
         onRemovePrompt={(index) => {
+          setCheckpointUndoStack([...checkpointUndoStack, [...displayPrompts]]);
           const nextPrompts = [...displayPrompts];
           nextPrompts[index] = "";
           const nextChecks = [...displayChecks];
@@ -710,11 +690,15 @@ export default function DayEntry() {
         onAddPrompt={() => {
           const emptyIndex = displayPrompts.findIndex((item) => item.trim().length === 0);
           if (emptyIndex === -1) return;
+          setCheckpointUndoStack([...checkpointUndoStack, [...displayPrompts]]);
           const nextPrompts = [...displayPrompts];
           nextPrompts[emptyIndex] = `New checkpoint ${emptyIndex + 1}`;
           updateField("checkpointPrompts", normalizeCheckpointPrompts(nextPrompts));
         }}
-        onResetPrompts={() => updateField("checkpointPrompts", normalizeCheckpointPrompts(DEFAULT_CHECKPOINTS))}
+        onResetPrompts={() => {
+          setCheckpointUndoStack([...checkpointUndoStack, [...displayPrompts]]);
+          updateField("checkpointPrompts", normalizeCheckpointPrompts(DEFAULT_CHECKPOINTS));
+        }}
       />
 
       <QuoteSection
@@ -979,6 +963,8 @@ function CheckpointSection({
   checks,
   prompts,
   readOnly,
+  canUndo,
+  onUndo,
   onToggle,
   onPromptChange,
   onRemovePrompt,
@@ -988,6 +974,8 @@ function CheckpointSection({
   checks: boolean[];
   prompts: string[];
   readOnly: boolean;
+  canUndo: boolean;
+  onUndo: () => void;
   onToggle: (index: number) => void;
   onPromptChange: (index: number, value: string) => void;
   onRemovePrompt: (index: number) => void;
@@ -1007,6 +995,16 @@ function CheckpointSection({
           </span>
           {!readOnly && (
             <>
+              {canUndo && (
+                <button
+                  type="button"
+                  className="btn-ghost text-xs px-2 py-1"
+                  onClick={onUndo}
+                  title="Undo last checkpoint change"
+                >
+                  ↶ Undo
+                </button>
+              )}
               <button
                 type="button"
                 className="btn-ghost text-xs px-2 py-1"
@@ -1033,7 +1031,7 @@ function CheckpointSection({
           const checked = checks[index] ?? false;
           return (
             <div
-              key={`${index}-${question}`}
+              key={index}
               className="rounded-xl p-3 transition-all"
               style={{
                 background: checked ? "rgba(16,185,129,0.08)" : "var(--bg-secondary)",
@@ -1384,6 +1382,12 @@ function TodosSection({
       todos.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)),
     );
 
+  const updateTodoText = (id: string, text: string) => {
+    onChange(
+      todos.map((t) => (t.id === id ? { ...t, text } : t)),
+    );
+  };
+
   const deleteTodo = (id: string) => onChange(todos.filter((t) => t.id !== id));
 
   const completed = todos.filter((t) => t.completed).length;
@@ -1426,6 +1430,10 @@ function TodosSection({
         </p>
       )}
 
+      <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+        Click into any task name to edit it directly.
+      </p>
+
       {/* List */}
       <ul className="space-y-1">
         {todos.map((t) => (
@@ -1445,12 +1453,24 @@ function TodosSection({
               className="flex-1 text-sm"
               style={{
                 textDecoration: t.completed ? "line-through" : "none",
-                color: t.completed
-                  ? "var(--text-muted)"
-                  : "var(--text-primary)",
+                color: t.completed ? "var(--text-muted)" : "var(--text-primary)",
               }}
             >
-              {t.text}
+              {canManage ? (
+                <input
+                  type="text"
+                  value={t.text}
+                  onChange={(e) => updateTodoText(t.id, e.target.value)}
+                  className="w-full bg-transparent outline-none text-sm"
+                  style={{
+                    color: t.completed ? "var(--text-muted)" : "var(--text-primary)",
+                    textDecoration: t.completed ? "line-through" : "none",
+                  }}
+                  placeholder="Task name"
+                />
+              ) : (
+                t.text
+              )}
             </span>
             <button
               onClick={() => deleteTodo(t.id)}
@@ -1461,6 +1481,7 @@ function TodosSection({
                 background: "none",
                 border: "none",
               }}
+              title="Delete task"
             >
               <X size={14} />
             </button>

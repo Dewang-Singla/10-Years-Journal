@@ -1,4 +1,4 @@
-import { useState, useRef, lazy, Suspense } from "react";
+import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { Routes, Route, NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -26,6 +26,7 @@ const Search = lazy(() => import("./pages/Search"));
 const Reflection = lazy(() => import("./pages/Reflection"));
 const Settings = lazy(() => import("./pages/Settings"));
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import storage from "./storage";
 import { useUIStore } from "./store/uiStore";
 import { getDayNumber, getTrialDayNumber, TRIAL_START, TOTAL_JOURNAL_DAYS, TOTAL_TRIAL_DAYS, isTrialMonth } from "./utils/dates";
 import { hashPin } from "./utils/crypto";
@@ -94,6 +95,10 @@ function App() {
     : inTrialMonth
       ? `Trial Day ${trialDayNumber} of ${TOTAL_TRIAL_DAYS}`
       : `Day ${dayNumber} of ${TOTAL_JOURNAL_DAYS}`;
+
+  useEffect(() => {
+    void storage.purgeOutOfRangeEntries();
+  }, []);
 
   /* ── PIN lock state ─────────────────────────────────────── */
   const [isLocked, setIsLocked] = useState(() => {

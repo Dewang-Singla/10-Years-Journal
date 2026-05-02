@@ -1,6 +1,6 @@
 # 10 Years Journal
 
-10 Years Journal is a local-first Progressive Web App for documenting a fixed personal journey from May 1, 2026 through December 31, 2035.
+10 Years Journal is a local-first Progressive Web App for documenting a fixed personal journey from May 4, 2026 through December 31, 2035.
 
 It combines daily journaling, mood tracking, habits, timeline browsing, analytics, and end-of-journey reflections in a single offline-capable app.
 
@@ -20,7 +20,7 @@ It combines daily journaling, mood tracking, habits, timeline browsing, analytic
 - Auto-save behavior through state updates and debounced persistence.
 
 ### Journey Mechanics
-- Trial month: May 2026 is a warm-up month that must be completed before the main journey unlocks.
+- Trial month: May 4-31, 2026 is a 4-week warm-up window that must be completed before the main journey unlocks.
 - Main journey: June 1, 2026 through December 30, 2035.
 - Golden reflection day: December 31, 2035 closes the journey.
 - Monthly reflection cadence: from June 2026 onward, the last Sunday of each month is a reflection day.

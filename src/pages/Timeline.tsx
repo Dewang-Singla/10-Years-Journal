@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { format, isAfter, startOfDay, parseISO } from "date-fns";
 
 import storage from "../storage";
-import { getTodayDateId } from "../utils/dates";
+import { getTodayDateId, isValidJournalDate } from "../utils/dates";
 import { hasEntryContent, stripHtml } from "../utils/html";
 import type { DayEntry } from "../db";
 
@@ -41,6 +41,7 @@ export default function Timeline() {
     storage.getAllEntries().then((entries) => {
       const today = startOfDay(new Date());
       const withContent = entries
+        .filter((entry) => isValidJournalDate(parseISO(entry.id)))
         .filter(hasEntryContent)
         .filter((e) => !isAfter(startOfDay(parseISO(e.id)), today))
         .sort((a, b) => b.id.localeCompare(a.id));

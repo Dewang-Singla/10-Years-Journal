@@ -36,7 +36,7 @@ export const useEntryStore = create<EntryState>((set, get) => ({
       id: dateId,
       dayNumber: getDayNumber(date),
       date: dateToId(date),
-      moodRating: -1,
+      moodRating: 0,
       moodEmoji: "",
       ratingChecks: Array.from({ length: 10 }, () => false),
       checkpointPrompts: normalizeCheckpointPrompts(undefined),

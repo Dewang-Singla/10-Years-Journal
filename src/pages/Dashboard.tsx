@@ -13,6 +13,7 @@ import {
   isTrialMonth,
   isMainJourneyDate,
   isGoldenReflectionDay,
+  isValidJournalDate,
   TRIAL_START,
   dateToId,
   TOTAL_JOURNAL_DAYS,
@@ -148,7 +149,7 @@ export default function Dashboard() {
     });
 
     return trialEntries.length === TOTAL_TRIAL_DAYS
-      && trialEntries.every((entry) => hasEntryContent(entry) && entry.ratingChecks.length === 10 && entry.ratingChecks.some(Boolean));
+      && trialEntries.every((entry) => hasEntryContent(entry) && entry.moodRating >= 0);
   }, [entries, loading]);
   const trialMonthActive = isTrialMonth(today);
   const mainJourneyActive = isMainJourneyDate(today) && trialUnlocked;
@@ -157,7 +158,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     storage.getAllEntries().then((all) => {
-      setEntries(all);
+      setEntries(all.filter((entry) => isValidJournalDate(parseISO(entry.id))));
       setLoading(false);
     });
   }, []);
@@ -317,10 +318,10 @@ export default function Dashboard() {
               Trial Month
             </h1>
             <p className="text-lg" style={{ color: "var(--text-secondary)" }}>
-              May 1 - 31, 2026
+              May 4 - 31, 2026
             </p>
             <p className="text-sm" style={{ color: "var(--accent)" }}>
-              Complete May to unlock June 1, 2026
+              Complete the 4-week trial to unlock June 1, 2026
             </p>
           </>
         ) : goldenReflectionDay ? (

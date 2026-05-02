@@ -8,8 +8,8 @@ import {
   subDays,
 } from "date-fns";
 
-/** May 1 2026 starts the trial month. */
-export const TRIAL_START = new Date(2026, 4, 1); // months are 0-indexed
+/** May 4 2026 starts the 4-week trial window. */
+export const TRIAL_START = new Date(2026, 4, 4); // months are 0-indexed
 
 /** June 1 2026 = Day 1 of the main journey. */
 export const JOURNEY_START = new Date(2026, 5, 1);
@@ -33,7 +33,7 @@ export const REFLECTION_CYCLE_DAYS = 101;
 export const TOTAL_JOURNAL_DAYS =
   differenceInCalendarDays(JOURNAL_END, JOURNEY_START) + 1;
 
-/** Total trial days in May 2026. */
+/** Total trial days in the 4-week May 2026 window. */
 export const TOTAL_TRIAL_DAYS =
   differenceInCalendarDays(TRIAL_END, TRIAL_START) + 1;
 
@@ -43,7 +43,7 @@ function isSameDate(left: Date, right: Date): boolean {
 
 /**
  * Returns the day number for the given date.
- * May 1 2026 -> Day 1 of the trial month.
+ * May 4 2026 -> Day 1 of the trial window.
  * June 1 2026 -> Day 1 of the main journey.
  */
 export function getDayNumber(date: Date): number {
@@ -71,7 +71,7 @@ export function getJourneyDayNumber(date: Date): number {
 }
 
 /**
- * Returns the day number within the May trial month.
+ * Returns the day number within the May trial window.
  */
 export function getTrialDayNumber(date: Date): number {
   return isTrialMonth(date) ? differenceInCalendarDays(date, TRIAL_START) + 1 : 0;
@@ -87,15 +87,15 @@ export function getDateFromDayNumber(n: number): Date {
 
 /**
  * True if the date falls within the journal window
- * (May 1 2026 - December 31 2035, inclusive).
+ * (May 4 2026 - December 31 2035, inclusive).
  */
 export function isValidJournalDate(date: Date): boolean {
   return isWithinInterval(date, { start: TRIAL_START, end: GOLDEN_REFLECTION_DAY });
 }
 
-/** True when the date is in the May 2026 trial month. */
+/** True when the date is in the May 2026 trial window. */
 export function isTrialMonth(date: Date): boolean {
-  return date.getFullYear() === 2026 && date.getMonth() === 4;
+  return isWithinInterval(date, { start: TRIAL_START, end: TRIAL_END });
 }
 
 /** True when the date is in the main June 2026 - December 2035 journey. */

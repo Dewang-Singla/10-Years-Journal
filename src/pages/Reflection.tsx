@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 
 import storage from "../storage";
-import { ORIGIN, JOURNAL_END, TOTAL_JOURNAL_DAYS } from "../utils/dates";
+import { ORIGIN, JOURNAL_END, TOTAL_JOURNAL_DAYS, isValidJournalDate } from "../utils/dates";
 import { stripHtml } from "../utils/html";
 import type { DayEntry, ReflectionEntry } from "../db";
 
@@ -155,7 +155,11 @@ export default function Reflection() {
         storage.getAllReflections(),
       ]);
 
-      setEntries(allEntries.sort((a, b) => a.id.localeCompare(b.id)));
+      setEntries(
+        allEntries
+          .filter((entry) => isValidJournalDate(parseISO(entry.id)))
+          .sort((a, b) => a.id.localeCompare(b.id)),
+      );
 
       const refMap = new Map<string, string>();
       for (const r of allReflections) {

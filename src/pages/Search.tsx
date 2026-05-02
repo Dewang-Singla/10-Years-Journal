@@ -4,7 +4,7 @@ import { format, isAfter, startOfDay, parseISO } from "date-fns";
 import { Search as SearchIcon, X, Loader2 } from "lucide-react";
 
 import storage from "../storage";
-import { getTodayDateId } from "../utils/dates";
+import { getTodayDateId, isValidJournalDate } from "../utils/dates";
 import { hasEntryContent, stripHtml } from "../utils/html";
 import type { DayEntry } from "../db";
 
@@ -76,7 +76,12 @@ export default function Search() {
   /* ── Load all entries for recent + tags ───────────────── */
   useEffect(() => {
     storage.getAllEntries().then((entries) => {
-      setAllEntries(entries.filter(hasEntryContent).sort((a, b) => b.id.localeCompare(a.id)));
+      setAllEntries(
+        entries
+          .filter((entry) => isValidJournalDate(parseISO(entry.id)))
+          .filter(hasEntryContent)
+          .sort((a, b) => b.id.localeCompare(a.id)),
+      );
     });
     inputRef.current?.focus();
   }, []);
@@ -100,7 +105,10 @@ export default function Search() {
       setIsSearching(true);
       const found = await storage.searchEntries(q);
       const today = startOfDay(new Date());
-      const safe = found.filter((e) => !isAfter(startOfDay(parseISO(e.id)), today));
+      const safe = found.filter((e) =>
+        isValidJournalDate(parseISO(e.id)) &&
+        !isAfter(startOfDay(parseISO(e.id)), today),
+      );
       setResults(safe.sort((a, b) => b.id.localeCompare(a.id)));
       setHasSearched(true);
       setIsSearching(false);

@@ -25,6 +25,7 @@ import {
   getJourneyDayNumber,
   dateToId,
   JOURNAL_END,
+  isValidJournalDate,
   TOTAL_JOURNAL_DAYS,
 } from "../utils/dates";
 import { hasEntryContent, stripHtml } from "../utils/html";
@@ -106,7 +107,7 @@ export default function Stats() {
 
   useEffect(() => {
     Promise.all([storage.getAllEntries(), storage.getAllHabits(), storage.getStreakFreezes()]).then(([all, habits, allFreezes]) => {
-      setEntries(all.sort((a, b) => a.id.localeCompare(b.id)));
+      setEntries(all.filter((entry) => isValidJournalDate(parseISO(entry.id))).sort((a, b) => a.id.localeCompare(b.id)));
       setAllHabits(habits);
       setFreezes(allFreezes);
       setIsLoading(false);

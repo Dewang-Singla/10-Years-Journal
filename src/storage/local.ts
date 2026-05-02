@@ -2,6 +2,7 @@ import { db } from "../db";
 import type { DayEntry, Habit, ReflectionEntry, StreakFreeze } from "../db";
 import type { StorageAdapter } from "./index";
 import { differenceInCalendarDays, parseISO } from "date-fns";
+import { isValidJournalDate } from "../utils/dates";
 
 const MAX_FREEZES_PER_CYCLE = 2;
 const FREEZE_CYCLE_DAYS = 30;
@@ -162,6 +163,17 @@ export class LocalStorageAdapter implements StorageAdapter {
 
   async getAllEntries(): Promise<DayEntry[]> {
     return db.entries.orderBy("dayNumber").toArray();
+  }
+
+  async purgeOutOfRangeEntries(): Promise<number> {
+    const all = await db.entries.toArray();
+    const idsToDelete = all
+      .filter((entry) => !isValidJournalDate(parseISO(entry.id)))
+      .map((entry) => entry.id);
+
+    if (idsToDelete.length === 0) return 0;
+    await db.entries.bulkDelete(idsToDelete);
+    return idsToDelete.length;
   }
 
   async deleteEntry(dateId: string): Promise<void> {
