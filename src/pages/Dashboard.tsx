@@ -7,17 +7,14 @@ import storage from "../storage";
 import { useFreezeStore } from "../store/freezeStore";
 import {
   getJourneyDayNumber,
-  getTrialDayNumber,
   getTodayDateId,
   getDateFromDayNumber,
-  isTrialMonth,
   isMainJourneyDate,
   isGoldenReflectionDay,
   isValidJournalDate,
-  TRIAL_START,
+  JOURNEY_START,
   dateToId,
   TOTAL_JOURNAL_DAYS,
-  TOTAL_TRIAL_DAYS,
 } from "../utils/dates";
 import { hasEntryContent, stripHtml } from "../utils/html";
 import type { DayEntry } from "../db";
@@ -138,23 +135,10 @@ export default function Dashboard() {
 
   const today = useMemo(() => new Date(), []);
   const todayId = getTodayDateId();
-  const trialDayNumber = getTrialDayNumber(today);
   const journeyDayNumber = getJourneyDayNumber(today);
-  const trialUnlocked = useMemo(() => {
-    if (loading) return false;
-
-    const trialEntries = entries.filter((entry) => {
-      const entryDate = parseISO(entry.id);
-      return isTrialMonth(entryDate);
-    });
-
-    return trialEntries.length === TOTAL_TRIAL_DAYS
-      && trialEntries.every((entry) => hasEntryContent(entry) && entry.moodRating >= 0);
-  }, [entries, loading]);
-  const trialMonthActive = isTrialMonth(today);
-  const mainJourneyActive = isMainJourneyDate(today) && trialUnlocked;
+  const mainJourneyActive = isMainJourneyDate(today);
   const goldenReflectionDay = isGoldenReflectionDay(today);
-  const showTodayCard = !isBefore(today, TRIAL_START) && !goldenReflectionDay && (trialMonthActive || mainJourneyActive);
+  const showTodayCard = !isBefore(today, JOURNEY_START) && !goldenReflectionDay;
 
   useEffect(() => {
     storage.getAllEntries().then((all) => {
@@ -247,7 +231,7 @@ export default function Dashboard() {
     navigate(`/entry/${pick.id}`);
   };
 
-  const displayDayNumber = mainJourneyActive ? journeyDayNumber : trialDayNumber;
+  const displayDayNumber = mainJourneyActive ? journeyDayNumber : 0;
   const currentPhase = getCurrentPhase(Math.max(journeyDayNumber, 1));
   const phaseProgress = mainJourneyActive ? getPhaseProgress(journeyDayNumber, currentPhase) : 0;
   const nextPhase = PHASES[PHASES.indexOf(currentPhase) + 1] ?? null;
@@ -255,7 +239,7 @@ export default function Dashboard() {
   const journeyComplete = journeyDayNumber > TOTAL_JOURNAL_DAYS && !goldenReflectionDay;
   const progress = mainJourneyActive
     ? Math.min(Math.max(journeyDayNumber / TOTAL_JOURNAL_DAYS, 0), 1)
-    : Math.min(Math.max(trialDayNumber / TOTAL_TRIAL_DAYS, 0), 1);
+    : 0;
   const milestones = [350, 700, 1050, 1400, 1750, 2100, 2450, 2800, 3150, TOTAL_JOURNAL_DAYS]
     .map((day) => ({ day, date: format(getDateFromDayNumber(day), "MMM d, yyyy") }));
 
@@ -290,7 +274,7 @@ export default function Dashboard() {
     <div className="page-transition max-w-4xl mx-auto space-y-8 pb-20">
       {/* ── Hero Section ─────────────────────────────────── */}
       <section className="text-center space-y-4">
-        {isBefore(today, TRIAL_START) ? (
+        {isBefore(today, JOURNEY_START) ? (
           <>
             <h1
               className="text-5xl font-serif font-bold"
@@ -299,29 +283,14 @@ export default function Dashboard() {
               Journey Begins Soon
             </h1>
             <p className="text-lg" style={{ color: "var(--text-secondary)" }}>
-              Trial month starts {format(TRIAL_START, "MMMM d, yyyy")}
+              Journey starts {format(JOURNEY_START, "MMMM d, yyyy")}
             </p>
             <p className="text-sm" style={{ color: "var(--accent)" }}>
               {(() => {
-                const d = Math.abs(differenceInCalendarDays(TRIAL_START, new Date()));
+                const d = Math.abs(differenceInCalendarDays(JOURNEY_START, new Date()));
                 if (d === 0) return "Journey starts today!";
                 return `${d} ${d === 1 ? "day" : "days"} to go`;
               })()}
-            </p>
-          </>
-        ) : trialMonthActive && !trialUnlocked ? (
-          <>
-            <h1
-              className="text-5xl font-serif font-bold"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Trial Month
-            </h1>
-            <p className="text-lg" style={{ color: "var(--text-secondary)" }}>
-              May 4 - 31, 2026
-            </p>
-            <p className="text-sm" style={{ color: "var(--accent)" }}>
-              Complete the 4-week trial to unlock June 1, 2026
             </p>
           </>
         ) : goldenReflectionDay ? (
@@ -368,16 +337,16 @@ export default function Dashboard() {
             />
           </div>
           <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-            {isBefore(today, TRIAL_START)
-              ? `0 / ${TOTAL_TRIAL_DAYS} trial days`
+            {isBefore(today, JOURNEY_START)
+              ? `0 / ${TOTAL_JOURNAL_DAYS} journey days`
               : mainJourneyActive
                 ? <>{displayDayNumber} {displayDayNumber === 1 ? 'day' : 'days'} in &nbsp;·&nbsp; {(() => { const r = Math.max(TOTAL_JOURNAL_DAYS - displayDayNumber, 0); return `${r} ${r === 1 ? 'day' : 'days'} remaining`; })()}</>
-                : <>{displayDayNumber} {displayDayNumber === 1 ? 'trial day' : 'trial days'} in &nbsp;·&nbsp; unlocks June 1</>}
+                : <>{displayDayNumber} {displayDayNumber === 1 ? 'day' : 'days'} in &nbsp;·&nbsp; unlocks June 1</>}
           </p>
         </div>
 
         {/* Pre-journey countdown */}
-        {!isBefore(today, TRIAL_START) && trialMonthActive && !trialUnlocked && (
+        {isBefore(today, JOURNEY_START) && (
           <div
             className="card p-6 max-w-md mx-auto text-center space-y-2"
             style={{ borderTop: "3px solid var(--accent)" }}
@@ -386,10 +355,10 @@ export default function Dashboard() {
               className="text-lg font-semibold"
               style={{ color: "var(--text-primary)" }}
             >
-              Complete the May trial to unlock June 1
+              Journey starts June 1
             </p>
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-              Need all {TOTAL_TRIAL_DAYS} trial days completed
+              Get ready for the first day of your 10-year journey
             </p>
           </div>
         )}
@@ -486,7 +455,7 @@ export default function Dashboard() {
           <div className="flex justify-between text-xs" style={{ color: "var(--text-muted)" }}>
             <span>
               {journeyDayNumber <= 0
-                ? `Phase begins ${format(TRIAL_START, "MMMM d, yyyy")}`
+                ? `Phase begins ${format(JOURNEY_START, "MMMM d, yyyy")}`
                 : `Day ${journeyDayNumber - currentPhase.start + 1} of ${currentPhase.end - currentPhase.start + 1} in this phase`}
             </span>
             {journeyDayNumber > 0 && nextPhase && (

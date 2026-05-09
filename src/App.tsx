@@ -28,7 +28,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import storage from "./storage";
 import { useUIStore } from "./store/uiStore";
-import { getDayNumber, getTrialDayNumber, TRIAL_START, TOTAL_JOURNAL_DAYS, TOTAL_TRIAL_DAYS, isTrialMonth } from "./utils/dates";
+import { getDayNumber, JOURNEY_START, TOTAL_JOURNAL_DAYS } from "./utils/dates";
 import { hashPin } from "./utils/crypto";
 
 /* ── Nav config ─────────────────────────────────────────────── */
@@ -82,23 +82,34 @@ function App() {
 
   const today = new Date();
   const dayNumber = getDayNumber(today);
-  const trialDayNumber = getTrialDayNumber(today);
-  const inTrialMonth = isTrialMonth(today);
   const progress = Math.min(Math.max(dayNumber / TOTAL_JOURNAL_DAYS, 0), 1);
-  const startLabel = TRIAL_START.toLocaleDateString("en-US", {
+  const startLabel = JOURNEY_START.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
-  const progressLabel = today < TRIAL_START
+  const progressLabel = today < JOURNEY_START
     ? `Starts ${startLabel}`
-    : inTrialMonth
-      ? `Trial Day ${trialDayNumber} of ${TOTAL_TRIAL_DAYS}`
-      : `Day ${dayNumber} of ${TOTAL_JOURNAL_DAYS}`;
+    : `Day ${dayNumber} of ${TOTAL_JOURNAL_DAYS}`;
+
+  const [isResetComplete, setIsResetComplete] = useState(() => {
+    return localStorage.getItem("journal_db_reset_v1") === "done";
+  });
 
   useEffect(() => {
-    void storage.purgeOutOfRangeEntries();
-  }, []);
+    if (isResetComplete) return;
+    let cancelled = false;
+
+    (async () => {
+      await storage.clearAllData();
+      localStorage.setItem("journal_db_reset_v1", "done");
+      if (!cancelled) setIsResetComplete(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isResetComplete]);
 
   /* ── PIN lock state ─────────────────────────────────────── */
   const [isLocked, setIsLocked] = useState(() => {
@@ -187,6 +198,10 @@ function App() {
       pinRefs[0].current?.focus()
       setTimeout(() => setPinShake(false), 400)
     }
+  }
+
+  if (!isResetComplete) {
+    return <PageLoader />;
   }
 
   /* ── PIN lock screen ────────────────────────────────────── */
@@ -356,7 +371,7 @@ function App() {
                     {progressLabel}
                   </span>
                   <span style={{ color: "var(--text-muted)" }}>
-                    {today < TRIAL_START ? "0%" : `${Math.round(progress * 100)}%`}
+                    {today < JOURNEY_START ? "0%" : `${Math.round(progress * 100)}%`}
                   </span>
                 </div>
                 <div
@@ -366,7 +381,7 @@ function App() {
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
-                      width: `${today < TRIAL_START ? 0 : progress * 100}%`,
+                      width: `${today < JOURNEY_START ? 0 : progress * 100}%`,
                       background: "var(--accent)",
                     }}
                   />

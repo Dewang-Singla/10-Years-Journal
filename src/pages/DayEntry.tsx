@@ -26,7 +26,6 @@ import {
 
 import { isAfter, startOfDay, parseISO, addDays, format } from "date-fns";
 
-import storage from "../storage";
 import { useEntryStore } from "../store/entryStore";
 import { useFreezeStore } from "../store/freezeStore";
 import { useHabitStore } from "../store/habitStore";
@@ -34,18 +33,14 @@ import {
   formatDayHeader,
   getJourneyDateType,
   getJourneyTheme,
-  isMainJourneyDate,
-  isTrialMonth,
   isValidJournalDate,
   dateToId,
   getTodayDateId,
   JOURNAL_END,
   GOLDEN_REFLECTION_DAY,
-  TOTAL_TRIAL_DAYS,
-  TRIAL_START,
+  JOURNEY_START,
 } from "../utils/dates";
 import { DEFAULT_CHECKPOINTS, normalizeCheckpointPrompts } from "../utils/checkpoints";
-import { hasEntryContent } from "../utils/html";
 import type { Todo, Memory, HabitLog } from "../db";
 
 /* ── Date picker constants ──────────────────────────────── */
@@ -54,15 +49,15 @@ const MONTH_NAMES = [
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 const YEAR_OPTIONS = Array.from(
-  { length: JOURNAL_END.getFullYear() - TRIAL_START.getFullYear() + 1 },
-  (_, idx) => TRIAL_START.getFullYear() + idx,
+  { length: JOURNAL_END.getFullYear() - JOURNEY_START.getFullYear() + 1 },
+  (_, idx) => JOURNEY_START.getFullYear() + idx,
 );
 
 function getMonthBoundsForYear(year: number): { min: number; max: number } {
-  const isStartYear = year === TRIAL_START.getFullYear();
+  const isStartYear = year === JOURNEY_START.getFullYear();
   const isEndYear = year === JOURNAL_END.getFullYear();
   return {
-    min: isStartYear ? TRIAL_START.getMonth() : 0,
+    min: isStartYear ? JOURNEY_START.getMonth() : 0,
     max: isEndYear ? JOURNAL_END.getMonth() : 11,
   };
 }
@@ -133,7 +128,6 @@ export default function DayEntry() {
   const applyFreeze = useFreeze;
 
   const [freezeMsg, setFreezeMsg] = useState<string | null>(null);
-  const [trialUnlocked, setTrialUnlocked] = useState<boolean | null>(null);
 
   /* ── Refs for auto-save ───────────────────────────────── */
   const hasModified = useRef(false);
@@ -154,29 +148,6 @@ export default function DayEntry() {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [dateId, loadEntry, loadHabits, loadFreezes, clearCurrentEntry]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      if (!isMainJourneyDate(date)) {
-        if (!cancelled) setTrialUnlocked(true);
-        return;
-      }
-
-      const allEntries = await storage.getAllEntries();
-      const trialEntries = allEntries.filter((entry) => isTrialMonth(parseISO(entry.date)));
-      const complete =
-        trialEntries.length === TOTAL_TRIAL_DAYS &&
-        trialEntries.every((entry) => hasEntryContent(entry) && entry.moodRating >= 0);
-
-      if (!cancelled) setTrialUnlocked(complete);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [dateId, date]);
 
   /* ── Auto-save debounce ───────────────────────────────── */
   useEffect(() => {
@@ -251,9 +222,9 @@ export default function DayEntry() {
   const [checkpointUndoStack, setCheckpointUndoStack] = useState<string[][]>([]);
 
   if (!isValidJournalDate(date)) {
-    const isBeforeJourneyStart = new Date() < TRIAL_START;
+    const isBeforeJourneyStart = new Date() < JOURNEY_START;
     const todayOrStart = isBeforeJourneyStart
-      ? dateToId(TRIAL_START)
+      ? dateToId(JOURNEY_START)
       : getTodayDateId();
 
     return (
@@ -268,48 +239,13 @@ export default function DayEntry() {
               Outside your journey
             </h2>
             <p style={{ color: "var(--text-muted)" }}>
-              This date is outside your journey window ({format(TRIAL_START, "MMM d, yyyy")} - {format(GOLDEN_REFLECTION_DAY, "MMM d, yyyy")})
+              This date is outside your journey window ({format(JOURNEY_START, "MMM d, yyyy")} - {format(GOLDEN_REFLECTION_DAY, "MMM d, yyyy")})
             </p>
             <button
               className="btn-primary"
               onClick={() => navigate(`/entry/${todayOrStart}`)}
             >
-              {isBeforeJourneyStart ? "← Go to Trial Start" : "← Go to Today"}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (trialUnlocked === null) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p style={{ color: "var(--text-muted)" }}>Loading…</p>
-      </div>
-    );
-  }
-
-  if (isMainJourneyDate(date) && !trialUnlocked) {
-    return (
-      <div className="page-transition max-w-3xl mx-auto pb-20">
-        <div className="flex flex-col items-center justify-center py-24 gap-5">
-          <div className="card p-10 flex flex-col items-center gap-5 text-center max-w-md w-full" style={{ borderTop: "4px solid #38BDF8" }}>
-            <span className="text-5xl">🔒</span>
-            <h2
-              className="text-2xl font-serif font-bold"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Main journey is locked
-            </h2>
-            <p style={{ color: "var(--text-muted)" }}>
-              Complete every day in the May 2026 trial month to unlock June 1, 2026.
-            </p>
-            <button
-              className="btn-primary"
-              onClick={() => navigate(`/entry/${dateToId(TRIAL_START)}`)}
-            >
-              Go to Trial Month
+              {isBeforeJourneyStart ? "← Go to Journey Start" : "← Go to Today"}
             </button>
           </div>
         </div>
@@ -374,8 +310,7 @@ export default function DayEntry() {
         />
 
         <div className="card p-4" style={{ background: journeyTheme.surfaceSoft, border: `1px solid ${journeyTheme.border}`, color: "var(--text-secondary)" }}>
-          {journeyType === "trial" && "Trial month: build the habit, write every day, and eliminate distractions."}
-          {journeyType === "common" && "Common journey day."}
+          {journeyType === "common" && "Journey day: build the habit, write every day, and eliminate distractions."}
           {journeyType === "monthly-reflection" && "Monthly reflection day: last Sunday of the month."}
           {journeyType === "golden" && "Golden reflection day: the 10-year closing reflection."}
         </div>
@@ -896,8 +831,8 @@ function DateJumper({
     onJump(today);
   };
 
-  const jumpToTrialStart = () => {
-    onJump(TRIAL_START);
+  const jumpToJourneyStart = () => {
+    onJump(JOURNEY_START);
   };
 
   const jumpToEnd = () => {
@@ -915,9 +850,9 @@ function DateJumper({
       </button>
       <button
         className="btn-ghost px-3 py-1 text-xs"
-        onClick={jumpToTrialStart}
+        onClick={jumpToJourneyStart}
       >
-        {format(TRIAL_START, "MMM yyyy")}
+        {format(JOURNEY_START, "MMM yyyy")}
       </button>
       <button
         className="btn-ghost px-3 py-1 text-xs"

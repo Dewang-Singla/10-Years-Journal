@@ -13,7 +13,7 @@ import storage from "../storage";
 import { useUIStore } from "../store/uiStore";
 import { useHabitStore } from "../store/habitStore";
 import { hashPin } from "../utils/crypto";
-import { TRIAL_START, GOLDEN_REFLECTION_DAY, isValidJournalDate } from "../utils/dates";
+import { JOURNEY_START, GOLDEN_REFLECTION_DAY, isValidJournalDate } from "../utils/dates";
 
 /* ── Constants ──────────────────────────────────────────────── */
 
@@ -183,7 +183,7 @@ export default function Settings() {
           Settings
         </h1>
         <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-            Manage your journal data and preferences for {TRIAL_START.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} - {GOLDEN_REFLECTION_DAY.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+          Manage your journal data and preferences for {JOURNEY_START.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} - {GOLDEN_REFLECTION_DAY.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
         </p>
       </div>
 
@@ -556,8 +556,8 @@ export default function Settings() {
             10 Years Journal
           </p>
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-              Your personal journey: {TRIAL_START.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} - {GOLDEN_REFLECTION_DAY.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-          </p>
+              Your personal journey: {JOURNEY_START.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} - {GOLDEN_REFLECTION_DAY.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+            </p>
           <p className="text-xs" style={{ color: "var(--text-muted)" }}>
             Built with React, TypeScript, TailwindCSS, Dexie.js
           </p>

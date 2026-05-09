@@ -8,9 +8,6 @@ import {
   subDays,
 } from "date-fns";
 
-/** May 4 2026 starts the 4-week trial window. */
-export const TRIAL_START = new Date(2026, 4, 4); // months are 0-indexed
-
 /** June 1 2026 = Day 1 of the main journey. */
 export const JOURNEY_START = new Date(2026, 5, 1);
 
@@ -23,9 +20,6 @@ export const JOURNAL_END = new Date(2035, 11, 30);
 /** The 10-year golden reflection day. */
 export const GOLDEN_REFLECTION_DAY = new Date(2035, 11, 31);
 
-/** Trial month ends on May 31 2026. */
-export const TRIAL_END = new Date(2026, 4, 31);
-
 /** Legacy cycle setting kept for backward compatibility with older helpers. */
 export const REFLECTION_CYCLE_DAYS = 101;
 
@@ -33,23 +27,15 @@ export const REFLECTION_CYCLE_DAYS = 101;
 export const TOTAL_JOURNAL_DAYS =
   differenceInCalendarDays(JOURNAL_END, JOURNEY_START) + 1;
 
-/** Total trial days in the 4-week May 2026 window. */
-export const TOTAL_TRIAL_DAYS =
-  differenceInCalendarDays(TRIAL_END, TRIAL_START) + 1;
-
 function isSameDate(left: Date, right: Date): boolean {
   return dateToId(left) === dateToId(right);
 }
 
 /**
  * Returns the day number for the given date.
- * May 4 2026 -> Day 1 of the trial window.
  * June 1 2026 -> Day 1 of the main journey.
  */
 export function getDayNumber(date: Date): number {
-  if (isTrialMonth(date)) {
-    return differenceInCalendarDays(date, TRIAL_START) + 1;
-  }
   if (isMainJourneyDate(date)) {
     return differenceInCalendarDays(date, JOURNEY_START) + 1;
   }
@@ -71,13 +57,6 @@ export function getJourneyDayNumber(date: Date): number {
 }
 
 /**
- * Returns the day number within the May trial window.
- */
-export function getTrialDayNumber(date: Date): number {
-  return isTrialMonth(date) ? differenceInCalendarDays(date, TRIAL_START) + 1 : 0;
-}
-
-/**
  * Returns the Date corresponding to a day number.
  * Day 1 -> June 1 2026.
  */
@@ -87,15 +66,10 @@ export function getDateFromDayNumber(n: number): Date {
 
 /**
  * True if the date falls within the journal window
- * (May 4 2026 - December 31 2035, inclusive).
+ * (June 1 2026 - December 31 2035, inclusive).
  */
 export function isValidJournalDate(date: Date): boolean {
-  return isWithinInterval(date, { start: TRIAL_START, end: GOLDEN_REFLECTION_DAY });
-}
-
-/** True when the date is in the May 2026 trial window. */
-export function isTrialMonth(date: Date): boolean {
-  return isWithinInterval(date, { start: TRIAL_START, end: TRIAL_END });
+  return isWithinInterval(date, { start: JOURNEY_START, end: GOLDEN_REFLECTION_DAY });
 }
 
 /** True when the date is in the main June 2026 - December 2035 journey. */
@@ -117,7 +91,7 @@ export function isMonthlyReflectionDay(date: Date): boolean {
   return isSameDate(date, lastSunday);
 }
 
-export type JourneyDateType = "trial" | "common" | "monthly-reflection" | "golden" | "out-of-range";
+export type JourneyDateType = "common" | "monthly-reflection" | "golden" | "out-of-range";
 
 export type JourneyTheme = {
   accent: string;
@@ -131,23 +105,12 @@ export type JourneyTheme = {
 export function getJourneyDateType(date: Date): JourneyDateType {
   if (!isValidJournalDate(date)) return "out-of-range";
   if (isGoldenReflectionDay(date)) return "golden";
-  if (isTrialMonth(date)) return "trial";
   if (isMonthlyReflectionDay(date)) return "monthly-reflection";
   return "common";
 }
 
 export function getJourneyTheme(date: Date): JourneyTheme {
   const type = getJourneyDateType(date);
-  if (type === "trial") {
-    return {
-      accent: "#38BDF8",
-      accentSoft: "rgba(56,189,248,0.18)",
-      border: "rgba(56,189,248,0.35)",
-      surface: "rgba(8,47,73,0.92)",
-      surfaceSoft: "rgba(12,74,110,0.12)",
-      glow: "drop-shadow(0 0 24px rgba(56,189,248,0.28))",
-    };
-  }
   if (type === "monthly-reflection") {
     return {
       accent: "#A78BFA",
@@ -195,7 +158,6 @@ export function formatDayHeader(date: Date): string {
   const day = getDayNumber(date);
   const formatted = format(date, "MMMM d, yyyy");
   if (isGoldenReflectionDay(date)) return `Golden Reflection Day · ${formatted}`;
-  if (isTrialMonth(date)) return `Try Day ${day} · ${formatted}`;
   if (isMonthlyReflectionDay(date)) return `Reflection Day · ${formatted}`;
   return `Day ${day} · ${formatted}`;
 }

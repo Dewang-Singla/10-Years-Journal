@@ -5,7 +5,6 @@ export interface StorageAdapter {
   getEntry(dateId: string): Promise<DayEntry | null>;
   saveEntry(entry: DayEntry): Promise<void>;
   getAllEntries(): Promise<DayEntry[]>;
-  purgeOutOfRangeEntries(): Promise<number>;
   deleteEntry(dateId: string): Promise<void>;
   getEntriesByTag(tag: string): Promise<DayEntry[]>;
   searchEntries(query: string): Promise<DayEntry[]>;

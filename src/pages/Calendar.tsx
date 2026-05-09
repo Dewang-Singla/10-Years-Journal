@@ -19,7 +19,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import storage from "../storage";
 import {
-  TRIAL_START,
+  JOURNEY_START,
   JOURNAL_END,
   getDayNumber,
   getJourneyDateType,
@@ -32,7 +32,7 @@ import type { DayEntry } from "../db";
 
 /* ── Constants ────────────────────────────────────────────── */
 
-const MIN_MONTH = startOfMonth(TRIAL_START);
+const MIN_MONTH = startOfMonth(JOURNEY_START);
 const MAX_MONTH = startOfMonth(JOURNAL_END);
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTH_NAMES = [
@@ -50,16 +50,16 @@ const MONTH_NAMES = [
   "Dec",
 ];
 const YEAR_OPTIONS = Array.from(
-  { length: JOURNAL_END.getFullYear() - TRIAL_START.getFullYear() + 1 },
-  (_, idx) => TRIAL_START.getFullYear() + idx,
+  { length: JOURNAL_END.getFullYear() - JOURNEY_START.getFullYear() + 1 },
+  (_, idx) => JOURNEY_START.getFullYear() + idx,
 );
 
 function getMonthBoundsForYear(year: number): { min: number; max: number } {
-  const isStartYear = year === TRIAL_START.getFullYear();
+  const isStartYear = year === JOURNEY_START.getFullYear();
   const isEndYear = year === JOURNAL_END.getFullYear();
 
   return {
-    min: isStartYear ? TRIAL_START.getMonth() : 0,
+    min: isStartYear ? JOURNEY_START.getMonth() : 0,
     max: isEndYear ? JOURNAL_END.getMonth() : 11,
   };
 }
@@ -89,7 +89,6 @@ const legendItems = [
 ];
 
 const journeyLegendItems = [
-  { color: "rgba(56,189,248,0.18)", border: "rgba(56,189,248,0.35)", label: "May 2026 trial month" },
   { color: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.28)", label: "Common journey day" },
   { color: "rgba(167,139,250,0.18)", border: "rgba(167,139,250,0.35)", label: "Monthly reflection day" },
   { color: "rgba(251,191,36,0.2)", border: "rgba(251,191,36,0.42)", label: "Golden reflection day" },
@@ -113,7 +112,7 @@ export default function Calendar() {
       }
     }
 
-    if (isBefore(today, TRIAL_START)) return startOfMonth(TRIAL_START);
+    if (isBefore(today, JOURNEY_START)) return startOfMonth(JOURNEY_START);
     if (isAfter(today, JOURNAL_END)) return startOfMonth(JOURNAL_END);
     return startOfMonth(today);
   });
@@ -293,9 +292,9 @@ export default function Calendar() {
         </button>
         <button
           className="btn-ghost text-xs px-3 py-1"
-          onClick={() => jumpToMonth(TRIAL_START.getFullYear(), TRIAL_START.getMonth())}
+          onClick={() => jumpToMonth(JOURNEY_START.getFullYear(), JOURNEY_START.getMonth())}
         >
-          {format(TRIAL_START, "MMM yyyy")}
+          {format(JOURNEY_START, "MMM yyyy")}
         </button>
         <button
           className="btn-ghost text-xs px-3 py-1"
@@ -356,7 +355,7 @@ export default function Calendar() {
           const inMonth = isSameMonth(day, currentMonth);
           const isCurrentDay = isTodayFn(day);
           const isValid = isValidJournalDate(day);
-          const beforeStart = isBefore(day, TRIAL_START);
+          const beforeStart = isBefore(day, JOURNEY_START);
           const dayNum = getDayNumber(day);
 
           const isFuture = isAfter(startOfDay(day), startOfDay(today));
@@ -486,7 +485,7 @@ function CalendarCell({
     );
   }
 
-  /* Before trial month start */
+  /* Before journey start */
   if (beforeStart) {
     return (
       <div
@@ -532,25 +531,6 @@ function CalendarCell({
         <span className="text-xs">{dayOfMonth}</span>
         <span style={{ color: journeyTheme.accent, fontSize: 16 }}>🌓</span>
         <span style={{ color: journeyTheme.accent, fontSize: 8 }}>Reflect</span>
-      </button>
-    );
-  }
-
-  /* Trial month day */
-  if (journeyType === "trial") {
-    return (
-      <button
-        onClick={onClick}
-        className="min-h-[60px] lg:min-h-[80px] rounded-lg p-1.5 text-xs cursor-pointer transition-all flex flex-col items-center justify-center gap-1"
-        style={{
-          background: journeyTheme.accentSoft,
-          border: isToday ? `2px solid ${journeyTheme.accent}` : `1px solid ${journeyTheme.border}`,
-          color: "var(--text-secondary)",
-        }}
-      >
-        <span className="text-xs">{dayOfMonth}</span>
-        <span style={{ color: journeyTheme.accent, fontSize: 16 }}>🧪</span>
-        <span style={{ color: journeyTheme.accent, fontSize: 8 }}>Try</span>
       </button>
     );
   }
